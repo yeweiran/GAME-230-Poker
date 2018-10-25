@@ -1,6 +1,8 @@
 #include "iostream"
 #include "time.h"   
 #include<string> 
+#include "fstream"
+
 using namespace std;
 
 #define _CRTDBG_MAP_ALLOC
@@ -14,7 +16,7 @@ using namespace std;
 	#endif
 #endif
 
-int money = 5;
+int money = 10;
 int ante = 1;
 
 struct node
@@ -78,18 +80,13 @@ void DelLinkedList(linkedList* list)
 	delete list;
 }
 
-linkedList* InitDeck(linkedList* deck)
+void InitDeck(linkedList* deck)
 {
-	if (deck->head != nullptr) {
-		DelLinkedList(deck);
-	}
-	deck = CreateLinkedList();
 	for (int i = 0; i < 4; i++) {
 		for (int j = 0; j < 13; j++) {
 			AddLast(deck, j, i);
 		}
 	}
-	return deck;
 }
 
 int CountItems(linkedList* list)
@@ -273,6 +270,53 @@ int SortList(linkedList* list) {
 	return 0;
 }
 
+string GetCurTime()
+{
+	time_t rawtime;
+	struct tm * timeinfo;
+	char buffer[128] = { 0 };
+	time(&rawtime);
+	timeinfo = localtime(&rawtime);
+	strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", timeinfo);
+	return string(buffer);
+}
+
+int WriteLog(int value, bool flag) {
+	ofstream out("log.txt",ios::app);
+	//ifstream in("log.txt");
+	if (out.is_open())
+	{
+		out << GetCurTime();
+		if (flag) {
+			out << "\twin:\t$" << value << endl;
+		}
+		else {
+			out << "\tlose:\t$" << value << endl;
+		}
+		out.close();
+	}
+	else {
+		cout << "Open file failed.\n";
+	}
+	return 0;
+}
+
+int ReadLog() {
+	char buffer[256];
+	ifstream in("log.txt");
+	if (!in.is_open())
+	{
+		cout << "Open file failed.\n"; 
+		return 0;
+	}
+	while (!in.eof())
+	{
+		in.getline(buffer, 100);
+		cout << buffer << endl;
+	}
+	return 0;
+}
+
 int CalAward(linkedList* hand) {
 	bool flush = true;
 	bool three = 0;
@@ -318,36 +362,44 @@ int CalAward(linkedList* hand) {
 	if (flush && royal) {
 		cout << "Royal Flush!\nYou won $800!\n";
 		money += 800;
+		WriteLog(800, 1);
 	}
 	else if (flush && straight) {
 		cout << "Straight Flush!\nYou won $50!\n";
 		money += 50;
+		WriteLog(50, 1);
 	}
 	else if (flush) {
 		cout << "Flush!\nYou won $6!\n";
 		money += 6;
+		WriteLog(6, 1);
 	}
 	else if (four) {
 		cout << "Four of a Kind!\nYou won $25!\n";
 		money += 25;
+		WriteLog(25, 1);
 	}
 	else if (pair == 2) {
 		cout << "Two pair!\nYou won $2!\n";
 		money += 2;
+		WriteLog(2, 1);
 	}
 	else if (three) {
 		if (pair == 1) {
 			cout << "Full House!\nYou won $9!\n";
 			money += 9;
+			WriteLog(9, 1);
 		}
 		else {
 			cout << "Three of a Kind!\nYou won $3!\n";
 			money += 3;
+			WriteLog(3, 1);
 		}
 	}
 	else if (pair == 1 && validPair) {
 		cout << "One pair!\nYou won $1!\n";
 		money += 1;
+		WriteLog(1, 1);
 	}
 	else {
 		cout << "Nothing!\n";
@@ -418,6 +470,7 @@ int GameFunc(linkedList* deck, linkedList* hand, linkedList* discard) {
 	int swapDeckIndex = 0;
 	int deckCount = 0;
 	money -= ante;
+	WriteLog(ante, 0);
 	while (true) {
 		system("cls");
 		cout << "Your Money: $" << money << endl;
@@ -434,6 +487,7 @@ int GameFunc(linkedList* deck, linkedList* hand, linkedList* discard) {
 			<< "- Type \"all\" to keep all cards in your hand.\n"
 			<< "- Type \"exit\" to exit the game.\n"
 			<< "- Type \"swap\" to CHEAT and swap a card in your hand with one in the deck.\n"
+			<< "- Type \"log\" to see the log of win and lose.\n"
 			<< ">";
 
 		while (true) {
@@ -450,6 +504,12 @@ int GameFunc(linkedList* deck, linkedList* hand, linkedList* discard) {
 			else if (input == "deck") {
 				cout << "The deck contains: \n";
 				ShowList(deck);
+				system("pause");
+				break;
+			}
+			else if (input == "log") {
+				cout << "The log: \n";
+				ReadLog();
 				system("pause");
 				break;
 			}
@@ -562,7 +622,7 @@ int GameFunc(linkedList* deck, linkedList* hand, linkedList* discard) {
 
 int GameControl(linkedList* deck, linkedList* hand, linkedList* discard) {
 	char input;
-	deck = InitDeck(deck);
+	InitDeck(deck);
 	if (ShowMainMenu()) {
 		return 0;
 	}
@@ -611,6 +671,9 @@ int main() {
 	linkedList* discard = CreateLinkedList();
 	linkedList* hand = CreateLinkedList();
 	GameControl(deck, hand, discard);
+	DelLinkedList(deck);
+	DelLinkedList(hand);
+	DelLinkedList(discard);
 	system("cls");
 	cout << "This is a simple game produced by Weiran Ye in UCSC GPM project GAME-230.\n"
 		<< "Thank you so much for playing my game!\n";
