@@ -16,7 +16,7 @@ using namespace std;
 	#endif
 #endif
 
-int money = 10;
+int money = 5;
 int ante = 1;
 
 struct node
@@ -272,12 +272,12 @@ int SortList(linkedList* list) {
 
 string GetCurTime()
 {
-	time_t rawtime;
-	struct tm * timeinfo;
 	char buffer[128] = { 0 };
-	time(&rawtime);
-	timeinfo = localtime(&rawtime);
-	strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", timeinfo);
+	struct tm t;  
+	time_t now; 
+	time(&now);    
+	localtime_s(&t, &now); 
+	strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", &t);
 	return string(buffer);
 }
 
